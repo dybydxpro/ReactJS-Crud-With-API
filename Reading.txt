@@ -1,0 +1,129 @@
+	[Key]
+        public int Id { get; set; }
+        [Required]
+        public string Name { get; set; }
+        [Required]
+        public string Type { get; set; }
+        public DateTime CreatedDateTime { get; set; } = DateTime.Now;
+
+
+    [Route("api/[controller]")]
+    [ApiController]
+    public class EmployeeApiController : ControllerBase
+    {
+        private readonly AppDatabaseContext _db;
+
+        public EmployeeApiController(AppDatabaseContext db)
+        {
+            _db = db;
+        }
+
+        [HttpGet]
+        public async Task<ActionResult<List<AppDatabaseContext>>> Get()
+        {
+            return Ok(await _db.Employees.ToListAsync());
+        }
+
+        [HttpGet("{id}")]
+        public async Task<ActionResult<List<AppDatabaseContext>>> Get(int id)
+        {
+            var data = await _db.Employees.FindAsync(id);
+            if(data == null)
+            {
+                return BadRequest("Employee Data not found!");
+            }
+            return Ok(data);
+        }
+
+        [HttpPost]
+        public async Task<ActionResult<List<AppDatabaseContext>>> Post(Employee emp)
+        {
+            _db.Employees.Add(emp);
+            await _db.SaveChangesAsync();
+            return Ok(await _db.Employees.ToListAsync());
+        }
+
+        [HttpPut]
+        public async Task<ActionResult<List<AppDatabaseContext>>> Put(Employee emp)
+        {
+            var data = _db.Employees.Find(emp.Id);
+            if(data == null)
+            {
+                return BadRequest("Employee not found!");
+            }
+            data.Name = emp.Name;
+            data.Type = emp.Type;
+            await _db.SaveChangesAsync();
+            return Ok(await _db.Employees.ToListAsync());
+        }
+
+        [HttpDelete("{id}")]
+        public async Task<ActionResult<List<AppDatabaseContext>>> Delete(int id)
+        {
+            var data = await _db.Employees.FindAsync(id);
+            if(data == null)
+            {
+                return BadRequest("Employee not found!");
+            }
+            _db.Employees.Remove(data);
+            await _db.SaveChangesAsync();
+            return Ok();    //await _db.Employees.ToListAsync()
+        }
+    }
+
+
+
+
+
+    import React, { useState } from 'react';
+import Services from '../Services';
+
+function Home(){
+    const [data, setData] = useState({
+        id: 0,
+        name: "",
+        type: "",
+        createdDateTime: 0
+    });
+
+    getEmployeeData({(data) =>
+        Services.getAll().then((res) => {
+            this.setData({ data: res.data});
+        })
+        .catch((error)=>{console.log(error)});
+    });
+
+    render() {
+        return(
+            <div className='container'>
+                <br/>
+                <table className="table">
+                    <thead>
+                        <tr>
+                            <th scope="col">#</th>
+                            <th scope="col">Name</th>
+                            <th scope="col">Type</th>
+                            <th scope="col">CreatedDateTime</th>
+                            <th scope="col">Option</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {
+                            this.state.map(data =>
+                                <tr>
+                                    <th scope="row">{data.id}</th>
+                                    <td>{data.name}</td>
+                                    <td>{data.type}</td>
+                                    <td>{data.createdDateTime}</td>
+                                    <td>options</td>
+                                </tr>
+                            )
+                        }
+                    </tbody>
+                </table>
+            </div>
+        );
+    }
+}
+
+export default Home;
